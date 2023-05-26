@@ -22,7 +22,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 mongoose.connect(DATA_BASE, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  family: 4,
 });
+// mongoose.connect(DATA_BASE)
 
 app.use(helmet());
 app.use(cookieParser());
