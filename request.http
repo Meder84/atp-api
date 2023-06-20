@@ -1,8 +1,8 @@
-GET http://localhost:3000/cards
+GET http://localhost:3001/cards
 
 ###
 
-POST HTTP://localhost:3000
+POST HTTP://localhost:3001
 Content-Type: application/json
 
 {

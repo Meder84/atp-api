@@ -1,13 +1,40 @@
-const http = require('http'); 
+/* eslint-disable no-use-before-define */
+/* eslint-disable import/extensions */
+/* eslint-disable import/no-unresolved */
+/* eslint-disable no-undef */
+/* eslint-disable quotes */
+/* eslint-disable linebreak-style */
+/* eslint-disable no-multiple-empty-lines */
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const routes = require('./routes.js');
+const User = require('./models/user.js');
 
-const server = http.createServer((request, response) => { // создаём сервер 
-  console.log('Пришел ответ!');
-}); 
+const { PORT = 3001 } = process.env;
 
-server.listen(3001);
+const app = express();
 
+// const logger = (req, res, next) => {
+//   console.log('Запрос залогирован!');
+//   next();
+// };
 
+mongoose.connect('mongodb://localhost:27017/atp', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  family: 4,
+});
 
+// app.use(logger);
+app.use('/', routes);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.listen(PORT, () => {
+  // Если всё работает, консоль покажет, какой порт приложение слушает
+  console.log(`App listening on port ${PORT}`);
+});
 
 
 
