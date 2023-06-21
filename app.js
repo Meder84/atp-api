@@ -8,8 +8,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const routes = require('./routes.js');
-const User = require('./models/user.js');
+const routes = require('./routes/routes.js');
+const User = require('./models/users.js');
 
 const { PORT = 3001 } = process.env;
 

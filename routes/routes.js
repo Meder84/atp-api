@@ -4,8 +4,8 @@
 /* eslint-disable import/extensions */
 
 const router = require('express').Router(); // создали роутер
-const { users } = require('./db.js'); // данные нужны для роутинга, поэтому импортируем их
-const User = require('./models/user.js');
+const { createUser } = require('../controllers/users.js');
+const { users } = require('../db.js'); // данные нужны для роутинга, поэтому импортируем их
 
 // Проверим, существует ли пользователь:
 const doesUserExist = (req, res, next) => {
@@ -23,13 +23,8 @@ const sendUser = (req, res) => {
   res.send(`Пользователь ${users[id]}`);
 };
 
-const newUser = (req, res) => {
-  const { name, about } = req.body;
-
-  User.create({ name, about });
-};
-
 router.get('/users/:id', doesUserExist);
 router.get('/users/:id', sendUser);
+router.post('/', createUser);
 
 module.exports = router;
