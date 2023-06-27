@@ -1,15 +1,14 @@
 /* eslint-disable linebreak-style */
-/* eslint-disable func-names */
 const jwt = require('jsonwebtoken');
 const Unauthorized = require('../errors/Unauthorized');
-const { JWT_SECRET } = require('../config/index');
+
+const { JWT } = require('../config/constants');
 
 const handleAuthError = () => {
   throw new Unauthorized('Необходима авторизация');
 };
 
 module.exports = (req, res, next) => {
-  // const token = req.cookies.jwt;
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -21,7 +20,7 @@ module.exports = (req, res, next) => {
   let payload;
 
   try {
-    payload = jwt.verify(token, JWT_SECRET);
+    payload = jwt.verify(token, JWT);
   } catch (err) {
     return handleAuthError(res);
   }

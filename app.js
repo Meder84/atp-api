@@ -1,25 +1,26 @@
 /* eslint-disable linebreak-style */
-/* eslint-disable func-names */
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const cors = require('cors');
+const limiter = require('./middlewares/limiter');
 
-const { NOT_FOUND } = require('./config/constants');
+const router = require('./routes/index');
+
 const errorHandler = require('./middlewares/errorHandler');
-const { createUser, login } = require('./controllers/users');
-const { registerValid, loginValid } = require('./middlewares/validations');
-const auth = require('./middlewares/auth');
-const { PORT } = require('./config/index');
+
+const { PORT, DATA_BASE } = require('./config/constants');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb://localhost:27017/atp', {
+mongoose.connect(DATA_BASE, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   family: 4,
@@ -27,20 +28,12 @@ mongoose.connect('mongodb://localhost:27017/atp', {
 
 app.use(helmet());
 app.use(cookieParser());
+app.use(requestLogger); // Логгер запросов нужно подключить до всех обработчиков роутов:
 
 app.use(cors());
 
-app.post('/signup', registerValid, createUser);
-app.post('/signin', loginValid, login);
-
-app.use(auth);
-
-app.use('/', require('./routes/cards'));
-app.use('/', require('./routes/users'));
-
-app.use('*', (req, res) => {
-  res.status(NOT_FOUND).send({ message: 'Страница не найдена!' });
-});
-
+app.use(limiter);
+app.use(router);
+app.use(errorLogger); // нужно подключить после обработчиков роутов и до обработчиков ошибок:
 app.use(errorHandler);
-app.listen(PORT);
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

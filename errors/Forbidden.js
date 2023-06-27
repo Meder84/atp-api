@@ -1,7 +1,6 @@
 /* eslint-disable linebreak-style */
-/* eslint-disable func-names */
 class Forbidden extends Error {
-  constructor(message) {
+  constructor(message = 'Запрещено') { // У клиента нет прав доступа к содержимому.
     super(message);
     this.message = message;
     this.name = 'Forbidden';

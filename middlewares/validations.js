@@ -1,8 +1,14 @@
 /* eslint-disable linebreak-style */
-/* eslint-disable func-names */
 const { celebrate, Joi } = require('celebrate');
 const validator = require('validator');
-const { regexLink } = require('../config/constants');
+
+function urlValid(url) {
+  const resultUrlValid = validator.isURL(url);
+  if (!resultUrlValid) {
+    throw new Error('url некорректный!');
+  }
+  return url;
+}
 
 const registerValid = celebrate({
   body: Joi.object().keys({
@@ -19,9 +25,7 @@ const registerValid = celebrate({
       'any.required': 'Пароль не указан',
       'string.min': 'Пароль должен быть больше 8и символов',
     }),
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(regexLink),
+    name: Joi.string().required().min(2).max(30),
   }),
 });
 
@@ -46,41 +50,36 @@ const loginValid = celebrate({
 const userUbdateValid = celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
+    email: Joi.string().required().email(),
   }),
 });
 
-const userValidId = celebrate({
-  params: Joi.object().keys({
-    userId: Joi.string().length(24).hex().required(),
-  }),
-});
-
-const avatarValid = celebrate({
+const movieValid = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().required().pattern(regexLink),
+    country: Joi.string().required(),
+    director: Joi.string().required(),
+    duration: Joi.number().required(),
+    year: Joi.string().required().pattern(/\d{4}/),
+    description: Joi.string().required(),
+    image: Joi.string().required().custom(urlValid),
+    trailerLink: Joi.string().required().custom(urlValid),
+    thumbnail: Joi.string().required().custom(urlValid),
+    movieId: Joi.number().integer().required(),
+    nameRU: Joi.string().required(),
+    nameEN: Joi.string().required(),
   }),
 });
 
-const cardValid = celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    link: Joi.string().required().pattern(regexLink),
-  }),
-});
-
-const cardIdValid = celebrate({
+const idValid = celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().length(24).hex().required(),
+    _id: Joi.string().length(24).hex().required(),
   }),
 });
 
 module.exports = {
   registerValid,
   loginValid,
-  userValidId,
   userUbdateValid,
-  cardValid,
-  cardIdValid,
-  avatarValid,
+  movieValid,
+  idValid,
 };

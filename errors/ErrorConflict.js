@@ -1,5 +1,4 @@
 /* eslint-disable linebreak-style */
-/* eslint-disable func-names */
 class ErrorConflict extends Error {
   constructor(message = 'Произошел конфликт!') {
     super(message);

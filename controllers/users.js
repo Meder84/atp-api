@@ -1,76 +1,33 @@
 /* eslint-disable linebreak-style */
-/* eslint-disable func-names */
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFound = require('../errors/NotFoundError');
 const ErrorConflict = require('../errors/ErrorConflict');
 const BadRequestError = require('../errors/BadRequest');
-const { SALT_ROUNDS, JWT_SECRET } = require('../config/index');
+const { SALT_ROUNDS } = require('../config/constants');
+const { JWT } = require('../config/constants');
 
 const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
-
-  User.findOne({ email })
-    .then((user) => {
-      if (user) {
-        throw new ErrorConflict(`Пользователь ${email} уже зарегистрирован`);
-      }
-      return bcrypt.hash(password, SALT_ROUNDS);
+  const { name, email, password } = req.body;
+  bcrypt.hash(password, SALT_ROUNDS)
+    .then((hash) => User.create({ // вернём записанные в базу данные
+      name, email, password: hash,
     })
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((user) => res.status(200).send({
-      data: {
-        name: user.name,
-        avatar: user.avatar,
-        email: user.email,
-      },
-    }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError({ message: err.message }));
-      } else {
-        next(err);
-      }
-    });
-};
-
-const login = (req, res, next) => {
-  const { email, password } = req.body;
-
-  return User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
-      res.cookie('jwt', token, {
-        maxAge: 3600000 * 24 * 7,
-        httpOnly: true,
-        sameSite: true,
+      .then((user) => {
+        const newUser = user.toObject();
+        delete newUser.password;
+        res.send(newUser);
       })
-        .send({ message: 'Авторизация прошла успешно!' });
-    })
-    .catch(next);
-};
-
-const getUser = (req, res, next) => {
-  User.find({})
-    .then((user) => res.send({ data: user }))
-    .catch(next);
-};
-
-const getUserById = (req, res, next) => {
-  User.findById(req.params.userId)
-    .orFail(() => {
-      throw new NotFound('Пользователь с указанным _id не найден!');
-    })
-    .then((user) => res.send({ data: user }))
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          throw new BadRequestError({ message: err.message });
+        }
+        if (err.code === 11000) {
+          throw new ErrorConflict(`Пользователь ${email} уже зарегистрирован`);
+        }
+        return next(err);
+      }))
     .catch(next);
 };
 
@@ -84,13 +41,15 @@ const getUsersMe = (req, res, next) => {
 };
 
 const updateUser = (req, res, next) => {
-  const { name, about } = req.body;
-  User.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
+  const { name, email } = req.body;
+  User.findByIdAndUpdate( // найти первое совпадение с полем user._id
+    // Есть тонкость в работе методов обновления: по умолчанию параметр,
+    // который получает на вход обработчик then — это документ до обновления:
+    req.user._id, // user здесь — это документ до обновления
+    { name, email },
     {
-      new: true,
-      runValidators: true,
+      new: true, // обработчик then получит на вход обновлённую запись
+      runValidators: true, // данные будут валидированы перед изменением
     },
   )
     .orFail(() => {
@@ -100,41 +59,34 @@ const updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError({ message: err.message }));
+      }
+      if (err.code === 11000) {
+        next(new ErrorConflict(`Пользователь ${email} уже зарегистрирован`));
       } else {
         next(err);
       }
     });
 };
 
-const updateAvatar = (req, res, next) => {
-  const { avatar } = req.body;
-  User.findByIdAndUpdate(
-    req.user._id,
-    { avatar },
-    {
-      new: true,
-      runValidators: true,
-    },
-  )
-    .orFail(() => {
-      throw new NotFound('Пользователь с указанным _id не найден!');
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT, { expiresIn: '7d' });
+      res.send({ token });
     })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError({ message: err.message }));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
+
+// const logout = (req, res) => {
+//   res.clearCookie('jwt').send({ message: 'Деавторизация прошла успешно!' });
+// };
 
 module.exports = {
   createUser,
-  login,
-  getUser,
-  getUserById,
   updateUser,
-  updateAvatar,
   getUsersMe,
+  login,
+  // logout,
 };
