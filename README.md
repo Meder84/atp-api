@@ -21,8 +21,8 @@
 
 **Использованные технологии**
 
-* javaScript.
-* Mongodb.
-* Node.js.
-* Express.
-* Mongoose.
+* javaScript;
+* Mongodb;
+* Node.js;
+* Express.js;
+* Mongoose;
