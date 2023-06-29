@@ -8,7 +8,7 @@ const {
   MONGO_DATA_BASE = 'mongodb://localhost:27017/moviesdb',
   NODE_ENV = 'development',
   JWT_SECRET = 'jwt_secret',
-  PORT = 3003,
+  PORT = 3001,
 } = process.env;
 
 const JWT = NODE_ENV === 'production' ? JWT_SECRET : 'jwt_secret';
